@@ -5,6 +5,8 @@
  */
 package com.webfront.u2.model;
 
+import java.util.Objects;
+
 /**
  *
  * @author rlittle
@@ -20,6 +22,43 @@ public class UvFile {
         fileName = name;
         read = rd;
         write = wr;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UvFile other = (UvFile) obj;
+        if (this.read != other.read) {
+            return false;
+        }
+        if (this.write != other.write) {
+            return false;
+        }
+        if (this.appId != other.appId) {
+            return false;
+        }
+        if (!Objects.equals(this.fileName, other.fileName)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 29 * hash + Objects.hashCode(this.fileName);
+        hash = 29 * hash + (this.read ? 1 : 0);
+        hash = 29 * hash + (this.write ? 1 : 0);
+        hash = 29 * hash + this.appId;
+        return hash;
     }
 
     /**
@@ -85,4 +124,6 @@ public class UvFile {
     public void setAppId(int appId) {
         this.appId = appId;
     }
+    
+    
 }

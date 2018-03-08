@@ -6,6 +6,9 @@
 package com.webfront.u2.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 /**
  *
@@ -16,20 +19,28 @@ public class Program {
     private String name;
     private String className;
     private ArrayList<UvFile> fileList;
+    private HashMap<Integer,Prompt> prompts;
     private String listName;
     private String[] selectCriteria;
+    private String description;
+    private boolean subroutine;
+    
+    private ObservableList<Prompt> promptList;
     
     public Program() {
-        
+        this.fileList = new ArrayList<>();
+        this.listName = "";
+        this.prompts = new HashMap<>();
+        this.selectCriteria = new String[25];
+        this.promptList = FXCollections.<Prompt>observableArrayList();
     }
     
     public Program(int id, String name, String pkg) {
+        this();
         this.id=id;
         this.name=name;
         this.className=pkg;
-        this.fileList = new ArrayList<>();
-        this.listName = "";
-        this.selectCriteria = new String[25];
+        this.promptList.setAll(this.prompts.values());
     }
 
     @Override
@@ -119,6 +130,62 @@ public class Program {
      */
     public void setSelectCriteria(String[] selectCriteria) {
         this.selectCriteria = selectCriteria;
+    }
+
+    /**
+     * @return the promptList
+     */
+    public HashMap<Integer,Prompt> getPrompts() {
+        return prompts;
+    }
+
+    /**
+     * @param promptList the promptList to set
+     */
+    public void setPrompts(HashMap<Integer,Prompt> p) {
+        this.prompts = p;
+    }
+
+    /**
+     * @return the promptList
+     */
+    public ObservableList<Prompt> getPromptList() {
+        return promptList;
+    }
+
+    /**
+     * @param promptList the promptList to set
+     */
+    public void setPromptList(ObservableList<Prompt> promptList) {
+        this.promptList = promptList;
+    }
+
+    /**
+     * @return the description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * @param description the description to set
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    /**
+     * @return the subroutine
+     */
+    public boolean isSubroutine() {
+        return subroutine;
+    }
+
+    /**
+     * @param subroutine the subroutine to set
+     */
+    public void setSubroutine(boolean subroutine) {
+        this.subroutine = subroutine;
     }
 
 }

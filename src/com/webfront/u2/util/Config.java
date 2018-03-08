@@ -8,6 +8,7 @@ package com.webfront.u2.util;
 import com.webfront.u2.model.Account;
 import com.webfront.u2.model.Profile;
 import com.webfront.u2.model.Program;
+import com.webfront.u2.model.Prompt;
 import com.webfront.u2.model.Server;
 import com.webfront.u2.model.User;
 import com.webfront.u2.model.UvFile;
@@ -125,7 +126,7 @@ public class Config {
             statement.executeUpdate("create table servers (name char(16), host char(128), url char(256))");
             statement.executeUpdate("create table settings (key char(6) not null, x int, y int, w int, h int)");
             statement.executeUpdate("create table users (id integer primary key autoincrement, name char(16), password char(256))");
-            statement.executeUpdate("create table apps (id integer primary key autoincrement, name char(128), package char(256))");
+            statement.executeUpdate("create table apps (id integer primary key autoincrement, name char(128), package char(256), description text)");
             statement.executeUpdate("create table files (id integer primary key autoincrement, name char(128), read tinyint, write tinyint");
 
             this.setConfig();
@@ -222,25 +223,68 @@ public class Config {
                 servers.add(new Server(name, host));
             }
 
-            // Load apps
-            sql = "select * from apps";
+            // Load all programs, files and prompts
+            sql = "SELECT ";
+            sql += "a.id as 'a.id', a.name as 'a.name', a.package as 'a.package', a.description as 'a.description', a.subroutine as 'a.subroutine',";
+            sql += "f.id as 'f.id', f.name as 'f.name', f.read as 'f.read', f.write as 'f.write', ";
+            sql += "p.id as 'p.id', p.number as 'p.number', p.message as 'p.message', p.required as 'p.required'";
+            sql += "from apps a left join files f on f.appid = a.id ";
+            sql += "left outer join prompts p on p.appid = a.id ";
+            sql += "order by a.name, f.name, p.number";
             rs = statement.executeQuery(sql);
+            int lastId = -1;
+            Program p = null;
             while (rs.next()) {
-                int id = rs.getInt("id");
-                sql = "select * from files where appid = " + id + " order by name";
-                Statement stmt = connection.createStatement();
-                ResultSet rs2 = stmt.executeQuery(sql);
-                String name = rs.getString("name");
-                String cls = rs.getString("package");
-                Program p = new Program(id, name, cls);
-                while (rs2.next()) {
-                    int fid = rs2.getInt("id");
-                    String fname = rs2.getString("name");
-                    int rd = rs2.getInt("read");
-                    int wr = rs2.getInt("write");
-                    UvFile uvf = new UvFile(id, fname, rd == 1, wr == 1);
-                    p.getFileList().add(uvf);
+                int appId = rs.getInt("a.id");
+                String appName = rs.getString("a.name");
+                String appPackage = rs.getString("a.package");
+                String appDescription = rs.getString("a.description");
+                boolean appSubroutine = rs.getInt("a.subroutine") == 1;
+                int fileId = rs.getInt("f.id");
+                String fileName = rs.getString("f.name");
+                boolean fileRead = rs.getInt("f.read") == 1;
+                boolean fileWrite = rs.getInt("f.write") == 1;
+                int promptId = rs.getInt("p.id");
+                int promptNum = rs.getInt("p.number");
+                String promptMessage = rs.getString("p.message");
+                boolean promptRequired = rs.getInt("p.required") == 1;
+
+                if (appId != lastId) {
+                    if (lastId != -1) {
+                        p.getPromptList().setAll(p.getPrompts().values());
+                        programs.add(p);
+                    }
+                    lastId = appId;
+                    p = new Program();
+                    p.setId(appId);
+                    p.setName(appName);
+                    p.setClassName(appPackage);
+                    p.setDescription(appDescription);
+                    p.setSubroutine(appSubroutine);
                 }
+
+                if (fileId > 0) {
+                    UvFile uvf = new UvFile(fileId, fileName, fileRead, fileWrite);
+                    if (!p.getFileList().contains(uvf)) {
+                        p.getFileList().add(uvf);
+                    }
+                }
+
+                if (promptId > 0) {
+                    Prompt prompt = new Prompt();
+                    prompt.setId(promptId);
+                    prompt.setNum(promptNum);
+                    prompt.setMessage(promptMessage);
+                    prompt.setRequired(promptRequired);
+                    if (!prompt.getMessage().isEmpty()) {
+                        if (!p.getPrompts().containsKey(promptId)) {
+                            p.getPrompts().put(prompt.getId(), prompt);
+                        }
+                    }
+                }
+            }
+            if (p != null) {
+                p.getPromptList().setAll(p.getPrompts().values());
                 programs.add(p);
             }
 
@@ -335,8 +379,9 @@ public class Config {
         try {
             Statement statement = connection.createStatement();
             String sql;
-            sql = "insert into apps (name,package) values (";
-            sql += '"' + p.getName() + '"' + ',' + '"' + p.getClassName() + '"' + ")";
+            int isSub = p.isSubroutine() ? 1 : 0;
+            sql = "insert into apps (name, package, description, subroutine) values (";
+            sql += '"' + p.getName() + '"' + ',' + '"' + p.getClassName() + '"' + "," + '"' + p.getDescription() + '"'+ "," +isSub + ")";
             statement.executeUpdate(sql);
             ResultSet rs = statement.executeQuery("SELECT id from apps order by id desc limit 0,1");
             int id = rs.getInt("id");
@@ -397,16 +442,20 @@ public class Config {
         }
         return u.getId();
     }
-    
+
     public void deleteProgram(Program p) {
         try {
             Statement statement = connection.createStatement();
             String sql;
-            sql = "delete from files where appid = "+p.getId();
+            sql = "delete from files where appid = " + p.getId();
             statement.execute(sql);
             statement.close();
             Statement stmt = connection.createStatement();
-            sql = "delete from apps where id = "+p.getId();
+            sql = "delete from apps where id = " + p.getId();
+            stmt.execute(sql);
+            stmt.close();
+            stmt = connection.createStatement();
+            sql = "delete from prompts where appid = " + p.getId();
             stmt.execute(sql);
             stmt.close();
             programs.remove(p);
@@ -448,19 +497,23 @@ public class Config {
         try {
             Statement statement = connection.createStatement();
             String sql;
+            int sub = p.isSubroutine() ? 1 : 0;
             sql = "update apps set name = ";
             sql += '"' + p.getName() + "\", package = ";
-            sql += '"' + p.getClassName() + "\" where id = "+p.getId();
+            sql += '"' + p.getClassName() + "\", ";
+            sql += "description = \"" + p.getDescription() + "\", ";
+            sql += "subroutine = " +sub+" ";
+            sql += "where id = " + p.getId();
             statement.executeUpdate(sql);
             statement.close();
             Statement stmt = connection.createStatement();
-            sql = "delete from files where appid = "+p.getId();
+            sql = "delete from files where appid = " + p.getId();
             stmt.execute(sql);
             stmt.close();
             addFiles(p.getFileList());
-            for(Program p1 : programs) {
-                if(p1.getId()==p.getId()) {
-                    int idx=programs.indexOf(p1);
+            for (Program p1 : programs) {
+                if (p1.getId() == p.getId()) {
+                    int idx = programs.indexOf(p1);
                     programs.set(idx, p);
                     break;
                 }
@@ -551,10 +604,10 @@ public class Config {
     public ObservableList<Program> getPrograms() {
         return programs;
     }
-    
+
     public Program getProgram(int id) {
-        for(Program p1 : programs) {
-            if(p1.getId()==id) {
+        for (Program p1 : programs) {
+            if (p1.getId() == id) {
                 return p1;
             }
         }
