@@ -23,6 +23,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
@@ -381,7 +382,7 @@ public class Config {
             String sql;
             int isSub = p.isSubroutine() ? 1 : 0;
             sql = "insert into apps (name, package, description, subroutine) values (";
-            sql += '"' + p.getName() + '"' + ',' + '"' + p.getClassName() + '"' + "," + '"' + p.getDescription() + '"'+ "," +isSub + ")";
+            sql += '"' + p.getName() + '"' + ',' + '"' + p.getClassName() + '"' + "," + '"' + p.getDescription() + '"' + "," + isSub + ")";
             statement.executeUpdate(sql);
             ResultSet rs = statement.executeQuery("SELECT id from apps order by id desc limit 0,1");
             int id = rs.getInt("id");
@@ -392,6 +393,25 @@ public class Config {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
         return -1;
+    }
+
+    public void addPrompts(Program p) {
+        try {
+            Statement statement = connection.createStatement();
+            String insert = "insert into prompts (appid, number, message) ";
+            insert += "values ";
+            String values = "";
+            Iterator<Prompt> iterator = p.getPrompts().values().iterator();
+            while (iterator.hasNext()) {
+                Prompt prp = iterator.next();
+                values = "(" + p.getId() + "," + prp.getNum() + ",\"" + prp.getMessage() + "\")";
+                String sql = insert + values;
+                statement.execute(sql);
+            }
+            statement.close();
+        } catch (SQLException ex) {
+
+        }
     }
 
     public void addFiles(ArrayList<UvFile> list) {
@@ -502,7 +522,7 @@ public class Config {
             sql += '"' + p.getName() + "\", package = ";
             sql += '"' + p.getClassName() + "\", ";
             sql += "description = \"" + p.getDescription() + "\", ";
-            sql += "subroutine = " +sub+" ";
+            sql += "subroutine = " + sub + " ";
             sql += "where id = " + p.getId();
             statement.executeUpdate(sql);
             statement.close();
@@ -518,6 +538,11 @@ public class Config {
                     break;
                 }
             }
+            stmt = connection.createStatement();
+            sql = "delete from prompts where appid = " + p.getId();
+            stmt.execute(sql);
+            stmt.close();
+            addPrompts(p);
         } catch (SQLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
