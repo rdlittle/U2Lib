@@ -279,7 +279,7 @@ public class Config {
                     prompt.setRequired(promptRequired);
                     if (!prompt.getMessage().isEmpty()) {
                         if (!p.getPrompts().containsKey(promptId)) {
-                            p.getPrompts().put(prompt.getId(), prompt);
+                            p.getPrompts().put(prompt.getNum(), prompt);
                         }
                     }
                 }
