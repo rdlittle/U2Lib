@@ -166,7 +166,6 @@ public class Config {
             }
 
             // Load profiles if any
-            String uname = "rlittle";
             sql = "select p.id as id, p.name as profileName, p.server as serverName, p.account as acctId, p.user as userId, ";
             sql += "u.name as userName, u.password as password, ";
             sql += "a.name as acctName, a.path as acctPath, ";
