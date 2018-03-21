@@ -126,4 +126,11 @@ public class UvData {
     public void setData(UniDynArray data) {
         this.data = data;
     }
+
+    /**
+     * @param fileName the fileName to set
+     */
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
 }
