@@ -194,8 +194,8 @@ public class UvClient {
                     }
                     sourceData.setId(recordId);
                     destData.setId(recordId);
+                    // Read the source record
                     try {
-
                         progress.state("Read " + srcHost + " " + sourceData.getId() + " ");
                         int readStatus = getRecord(sourceFile, sourceData);
                         if (readStatus == UniObjectsTokens.UVE_RNF) {
@@ -208,6 +208,7 @@ public class UvClient {
                         }
                         progress.display("OK");
                         progress.state("Read " + destHost + " " + sourceData.getId() + " ");
+                        // Read the destination record
                         readStatus = getRecord(destFile, destData);
                         switch (readStatus) {
                             case -1:
