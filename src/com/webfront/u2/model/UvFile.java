@@ -12,11 +12,14 @@ import java.util.Objects;
  * @author rlittle
  */
 public class UvFile {
+
     private String fileName;
     private boolean read;
     private boolean write;
     private int appId;
-    
+    private boolean remote;
+    private boolean local;
+
     public UvFile(int aid, String name, boolean rd, boolean wr) {
         appId = aid;
         fileName = name;
@@ -81,7 +84,7 @@ public class UvFile {
     public boolean isRead() {
         return read;
     }
-    
+
     public int getRead() {
         return isRead() ? 1 : 0;
     }
@@ -92,7 +95,7 @@ public class UvFile {
     public void setIsRead(boolean rd) {
         this.read = rd;
     }
-    
+
     public int getWrite() {
         return isWrite() ? 1 : 0;
     }
@@ -124,6 +127,13 @@ public class UvFile {
     public void setAppId(int appId) {
         this.appId = appId;
     }
-    
-    
+
+    public int getLocal() {
+        return local ? 1 : 0;
+    }
+
+    public int getRemote() {
+        return remote ? 1 : 0;
+    }
+
 }
