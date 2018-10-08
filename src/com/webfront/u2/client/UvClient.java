@@ -54,6 +54,13 @@ public class UvClient {
     public Profile getSourceProfile() {
         return sourceProfile;
     }
+    
+    public Uv getSourceSession() {
+        if (sourceSession == null) {
+            return null;
+        }
+        return sourceSession;
+    }
 
     /**
      * @param sourceProfile the sourceProfile to set
@@ -67,6 +74,13 @@ public class UvClient {
      */
     public Profile getDestProfile() {
         return destProfile;
+    }
+    
+    public Uv getDestSession() {
+        if (destSession == null) {
+            return null;
+        }
+        return destSession;
     }
 
     /**
@@ -327,7 +341,7 @@ public class UvClient {
         return list;
     }
 
-    private boolean doConnect() {
+    public boolean doConnect() {
         sourceSession = Uv.newInstance(sourceProfile);
         destSession = Uv.newInstance(destProfile);
         try {
@@ -360,6 +374,19 @@ public class UvClient {
         return true;
     }
 
+    public void doSingleConnect(String name) throws UniSessionException {
+        if (name=="source") {
+            sourceSession = Uv.newInstance(getSourceProfile());
+            sourceSession.connect();
+            progress.updateLed(name, true);
+        } else {
+            destSession = Uv.newInstance(getDestProfile());
+            destSession.connect();
+            progress.updateLed(name, true);
+        }
+    }
+    
+    
     public boolean doDisconnect() {
         try {
             sourceSession.disconnect();
@@ -373,6 +400,16 @@ public class UvClient {
             return false;
         }
         return true;
+    }
+    
+    public void doSingleDisconnect(String name) throws UniSessionException {
+        if (name.equals("source")) {
+            sourceSession.disconnect();
+            progress.updateLed(name, false);
+        } else {
+            destSession.disconnect();
+            progress.updateLed(name, false);
+        }
     }
 
     public int getRecord(UniFile file, UvData data) {
