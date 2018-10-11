@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
 
 /**
  *
@@ -49,6 +50,7 @@ public class Config {
     private ObservableList<Server> servers;
     private ObservableList<User> users;
     private ObservableList<Program> programs;
+    private ObservableMap<String, String> preferences;
 
     protected Config() {
         location = new Point();
@@ -58,6 +60,7 @@ public class Config {
         servers = FXCollections.<Server>observableArrayList();
         users = FXCollections.<User>observableArrayList();
         programs = FXCollections.<Program>observableArrayList();
+        preferences = FXCollections.<String, String>observableHashMap();
 
         hasDb = false;
         String homeDir = System.getProperty("user.home");
@@ -121,6 +124,7 @@ public class Config {
             statement.executeUpdate("drop table if exists users");
             statement.executeUpdate("drop table if exists apps");
             statement.executeUpdate("drop table if exists files");
+            statement.executeUpdate("drop table if exists preferences");
 
             statement.executeUpdate("create table accounts (id integer primary key autoincrement, server char(16), name char(128), path char(256))");
             statement.executeUpdate("create table profiles (id integer primary key autoincrement, name char(128), server char(16), account int, user int)");
@@ -129,6 +133,7 @@ public class Config {
             statement.executeUpdate("create table users (id integer primary key autoincrement, name char(16), password char(256))");
             statement.executeUpdate("create table apps (id integer primary key autoincrement, name char(128), package char(256), description text)");
             statement.executeUpdate("create table files (id integer primary key autoincrement, name char(128), read tinyint, write tinyint");
+            statement.executeUpdate("create table preferences (key varchar(128) not null, value varchar(256))");
 
             this.setConfig();
             hasDb = true;
@@ -305,6 +310,15 @@ public class Config {
                 String password = rs.getString("password");
                 users.add(new User(id, name, password));
             }
+            
+            // Load preferences
+            sql = "select * from preferences";
+            rs = statement.executeQuery(sql);
+            while(rs.next()) {
+                String key = rs.getString("key");
+                String value = rs.getString("value");
+                preferences.put(key, value);
+            }
 
         } catch (SQLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -430,6 +444,17 @@ public class Config {
         }
     }
 
+    public void addPreference(String key, String value) {
+        try {
+            Statement statement = connection.createStatement();
+            String insert = "insert into preferences (key, value) values ";
+            insert += "(\"" + key + "\", \"" + value + "\") ";
+            statement.executeUpdate(insert);
+        } catch (SQLException ex) {
+            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void addServer(Server s) {
         try {
             Statement statement = connection.createStatement();
@@ -497,6 +522,14 @@ public class Config {
         } catch (SQLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public void updatePreferences(String key, String value) throws SQLException {
+        String sql = "update preferences set value = \"" + value + "\" ";
+        sql += "where key = \"" + key + "\"";
+        Statement statement;
+        statement = connection.createStatement();
+        statement.executeUpdate(sql);
     }
 
     public void updateProfile(Profile p) throws SQLException {
@@ -636,6 +669,10 @@ public class Config {
             }
         }
         return null;
+    }
+
+    public ObservableMap<String, String> getPreferences() {
+        return this.preferences;
     }
 
     /**
