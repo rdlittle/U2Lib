@@ -28,7 +28,7 @@ public class Uv {
     private static Uv uv;
 
     public static enum SelectType {
-        LIST, QUERY;
+        LIST, QUERY, ITEMS;
     }
 
     public static enum Missing {

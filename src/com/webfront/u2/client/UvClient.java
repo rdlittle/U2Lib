@@ -18,6 +18,7 @@ import asjava.uniobjects.UniSessionException;
 import com.webfront.u2.model.Profile;
 import com.webfront.u2.model.UvData;
 import com.webfront.u2.util.Progress;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -32,6 +33,7 @@ public class UvClient {
 
     private Profile sourceProfile;
     private Profile destProfile;
+    private UniDynArray itemList;
     private Uv.SelectType selectType;
     private Uv.Existing existingPolicy;
     private Uv.Missing missingPolicy;
@@ -167,6 +169,7 @@ public class UvClient {
         UniDynArray destRecord = null;
         UniSelectList list;
         Double recordsDone;
+        
         progress.updateProgressBar(0D);
         if (doConnect()) {
             try {
@@ -176,12 +179,17 @@ public class UvClient {
                     } else {
                         list = getList(destSession, destData);
                     }
-                } else {
+                } else if (selectType == Uv.SelectType.LIST) {
                     if (selectFrom == Uv.SelectFrom.SOURCE) {
                         list = doQuery(sourceSession, sourceData);
                     } else {
                         list = doQuery(destSession, destData);
                     }
+                } else {
+                    UniDynArray uda = new UniDynArray();
+                    list = sourceSession.getSession().selectList(0);
+                    list.formList(getItemList());
+                    totalRecords = new Double(getItemList().dcount());
                 }
                 if (list == null) {
                     progress.display("Unable to create select list");
@@ -488,6 +496,23 @@ public class UvClient {
      */
     public void setSelectFrom(Uv.SelectFrom selectFrom) {
         this.selectFrom = selectFrom;
+    }
+
+    /**
+     * @return the itemList
+     */
+    public UniDynArray getItemList() {
+        return itemList;
+    }
+
+    /**
+     * @param itemList the itemList to set
+     */
+    public void setItemList(ArrayList<String> items) {
+        this.itemList = new UniDynArray();
+        for(String s : items) {
+            this.itemList.insert(-1, s);
+        }
     }
 
 }
