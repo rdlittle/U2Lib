@@ -179,7 +179,7 @@ public class UvClient {
                     } else {
                         list = getList(destSession, destData);
                     }
-                } else if (selectType == Uv.SelectType.LIST) {
+                } else if (selectType == Uv.SelectType.QUERY) {
                     if (selectFrom == Uv.SelectFrom.SOURCE) {
                         list = doQuery(sourceSession, sourceData);
                     } else {
