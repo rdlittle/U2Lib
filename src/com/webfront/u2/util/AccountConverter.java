@@ -15,6 +15,9 @@ import javafx.util.StringConverter;
 public class AccountConverter  extends StringConverter<Account> {
         @Override
         public String toString(Account object) {
+            if (object==null) {
+                return "";
+            }
             return object.getName();
         }
 

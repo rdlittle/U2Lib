@@ -66,7 +66,7 @@ public class Config {
         String homeDir = System.getProperty("user.home");
         String fileSep = System.getProperty("file.separator");
         File userDir = new File(homeDir);
-        File dotFile = new File(homeDir + "/.uvtool");
+        File dotFile = new File(homeDir + fileSep + ".uvtool");
         File uvToolDir = new File(userDir + fileSep + "UvTool");
         if (!uvToolDir.exists()) {
             uvToolDir.mkdir();
@@ -103,7 +103,6 @@ public class Config {
                         writer.write(uvToolDir.getAbsolutePath());
                         writer.flush();
                     }
-                    newInstall = false;
                 }
             } catch (IOException ex) {
                 Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -125,9 +124,10 @@ public class Config {
             statement.executeUpdate("create table if not exists servers (name char(16), host char(128), url char(256))");
             statement.executeUpdate("create table if not exists settings (key char(6) not null, x int, y int, w int, h int)");
             statement.executeUpdate("create table if not exists users (id integer primary key autoincrement, name char(16), password char(256))");
-            statement.executeUpdate("create table if not exists apps (id integer primary key autoincrement, name char(128), package char(256), description text)");
+            statement.executeUpdate("create table if not exists apps (id integer primary key autoincrement, name char(128), package char(256), description text, subroutine tinyint default 0)");
             statement.executeUpdate("create table if not exists files (id integer primary key autoincrement, name char(128), read tinyint, write tinyint)");
             statement.executeUpdate("create table if not exists preferences (key varchar(128) not null, value varchar(256))");
+            statement.executeUpdate("create table if not exists prompts (id integer primary key autoincrement, appid integer, number integer, message char(256), required tinyint default 0)");
 
             hasDb = true;
         } catch (SQLException ex) {
