@@ -41,7 +41,7 @@ public class Config {
     private Dimension size;
     private boolean newInstall;
     private boolean hasDb;
-    private Connection connection;
+    private static Connection connection = null;
     private final Point defaultWindowLoc = new Point(0, 0);
     private final Dimension defaultWindowSize = new Dimension(525, 425);
 
@@ -97,7 +97,6 @@ public class Config {
             try {
                 location = defaultWindowLoc;
                 size = defaultWindowSize;
-                initDb();
                 if (newInstall) {
                     try (FileWriter writer = new FileWriter(dotFile)) {
                         writer.write(uvToolDir.getAbsolutePath());
@@ -109,6 +108,8 @@ public class Config {
                 Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
+            initDb();
+            setConfig();
             getConfig();
         }
     }
@@ -117,25 +118,16 @@ public class Config {
         try {
             Statement statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-            statement.executeUpdate("drop table if exists accounts");
-            statement.executeUpdate("drop table if exists profiles");
-            statement.executeUpdate("drop table if exists servers");
-            statement.executeUpdate("drop table if exists settings");
-            statement.executeUpdate("drop table if exists users");
-            statement.executeUpdate("drop table if exists apps");
-            statement.executeUpdate("drop table if exists files");
-            statement.executeUpdate("drop table if exists preferences");
 
-            statement.executeUpdate("create table accounts (id integer primary key autoincrement, server char(16), name char(128), path char(256))");
-            statement.executeUpdate("create table profiles (id integer primary key autoincrement, name char(128), server char(16), account int, user int)");
-            statement.executeUpdate("create table servers (name char(16), host char(128), url char(256))");
-            statement.executeUpdate("create table settings (key char(6) not null, x int, y int, w int, h int)");
-            statement.executeUpdate("create table users (id integer primary key autoincrement, name char(16), password char(256))");
-            statement.executeUpdate("create table apps (id integer primary key autoincrement, name char(128), package char(256), description text)");
-            statement.executeUpdate("create table files (id integer primary key autoincrement, name char(128), read tinyint, write tinyint");
-            statement.executeUpdate("create table preferences (key varchar(128) not null, value varchar(256))");
+            statement.executeUpdate("create table if not exists accounts (id integer primary key autoincrement, server char(16), name char(128), path char(256))");
+            statement.executeUpdate("create table if not exists profiles (id integer primary key autoincrement, name char(128), server char(16), account int, user int)");
+            statement.executeUpdate("create table if not exists servers (name char(16), host char(128), url char(256))");
+            statement.executeUpdate("create table if not exists settings (key char(6) not null, x int, y int, w int, h int)");
+            statement.executeUpdate("create table if not exists users (id integer primary key autoincrement, name char(16), password char(256))");
+            statement.executeUpdate("create table if not exists apps (id integer primary key autoincrement, name char(128), package char(256), description text)");
+            statement.executeUpdate("create table if not exists files (id integer primary key autoincrement, name char(128), read integer, write integer)");
+            statement.executeUpdate("create table if not exists preferences (key varchar(128) not null, value varchar(256))");
 
-            this.setConfig();
             hasDb = true;
         } catch (SQLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -310,11 +302,11 @@ public class Config {
                 String password = rs.getString("password");
                 users.add(new User(id, name, password));
             }
-            
+
             // Load preferences
             sql = "select * from preferences";
             rs = statement.executeQuery(sql);
-            while(rs.next()) {
+            while (rs.next()) {
                 String key = rs.getString("key");
                 String value = rs.getString("value");
                 preferences.put(key, value);
@@ -337,15 +329,19 @@ public class Config {
                 sql += location.y + ",";
                 sql += size.width + ",";
                 sql += size.height + ")";
+                statement.executeUpdate(sql);
             } else {
-                sql = "update settings set";
-                sql += " x = " + location.x;
-                sql += ",y = " + location.y;
-                sql += ",w = " + size.width;
-                sql += ",h = " + size.height;
-                sql += " where key = \"window\"";
+                if (location.x > 0 && location.y > 0) {
+                    sql = "update settings set";
+                    sql += " x = " + location.x;
+                    sql += ",y = " + location.y;
+                    sql += ",w = " + size.width;
+                    sql += ",h = " + size.height;
+                    sql += " where key = \"window\"";
+                    statement.executeUpdate(sql);
+                }
             }
-            statement.executeUpdate(sql);
+            
         } catch (SQLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -366,7 +362,8 @@ public class Config {
             a.setId(id);
             accounts.add(a);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -385,7 +382,8 @@ public class Config {
             p.setId(id);
             profiles.add(p);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -403,7 +401,8 @@ public class Config {
             programs.add(p);
             return id;
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return -1;
     }
@@ -440,7 +439,8 @@ public class Config {
                 statement.executeUpdate(sql);
             }
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -451,7 +451,8 @@ public class Config {
             insert += "(\"" + key + "\", \"" + value + "\") ";
             statement.executeUpdate(insert);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -465,7 +466,8 @@ public class Config {
             statement.executeUpdate(sql);
             servers.add(s);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -482,7 +484,8 @@ public class Config {
             u.setId(id);
             users.add(u);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return u.getId();
     }
@@ -504,7 +507,8 @@ public class Config {
             stmt.close();
             programs.remove(p);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -520,13 +524,14 @@ public class Config {
             int idx = accounts.indexOf(a);
             accounts.set(idx, a);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public void updatePreferences(String key, String value) throws SQLException {
-        String sql = "update preferences set value = \"" + value + "\" ";
-        sql += "where key = \"" + key + "\"";
+        String sql = "replace into preferences (key, value) ";
+        sql += "values (\""+key+"\", \""+value+"\")";
         Statement statement;
         statement = connection.createStatement();
         statement.executeUpdate(sql);
@@ -576,7 +581,8 @@ public class Config {
             stmt.close();
             addPrompts(p);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -591,7 +597,8 @@ public class Config {
             int idx = users.indexOf(u);
             users.set(idx, u);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -605,7 +612,8 @@ public class Config {
             int idx = servers.indexOf(s);
             servers.set(idx, s);
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -614,7 +622,8 @@ public class Config {
             try {
                 connection.close();
             } catch (SQLException ex) {
-                Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Config.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -722,7 +731,8 @@ public class Config {
             a.setPath(rs.getString("path"));
             return a;
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -740,7 +750,8 @@ public class Config {
             u.setPassword(rs.getString("password"));
             return u;
         } catch (SQLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Config.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
