@@ -56,7 +56,7 @@ public class UvClient {
     public Profile getSourceProfile() {
         return sourceProfile;
     }
-    
+
     public Uv getSourceSession() {
         if (sourceSession == null) {
             return null;
@@ -77,7 +77,7 @@ public class UvClient {
     public Profile getDestProfile() {
         return destProfile;
     }
-    
+
     public Uv getDestSession() {
         if (destSession == null) {
             return null;
@@ -169,7 +169,7 @@ public class UvClient {
         UniDynArray destRecord = null;
         UniSelectList list;
         Double recordsDone;
-        
+
         progress.updateProgressBar(0D);
         if (doConnect()) {
             try {
@@ -315,8 +315,13 @@ public class UvClient {
         try {
             UniCommand cmd;
             cmd = uv.getSession().command();
-            cmd.setCommand(data.getSelectCriteria());
-            cmd.exec();
+            String[] commandStack = data.getSelectCriteria().split("\n");
+            for (String cmdSegment : commandStack) {
+                if (!cmdSegment.isEmpty()) {
+                    cmd.setCommand(cmdSegment);
+                    cmd.exec();
+                }
+            }
             list = uv.getSession().selectList(0);
             totalRecords = new Double(cmd.getAtSelected());
         } catch (UniSessionException ex) {
@@ -383,7 +388,7 @@ public class UvClient {
     }
 
     public void doSingleConnect(String name) throws UniSessionException {
-        if (name=="source") {
+        if (name == "source") {
             sourceSession = Uv.newInstance(getSourceProfile());
             sourceSession.connect();
             progress.updateLed(name, true);
@@ -393,8 +398,7 @@ public class UvClient {
             progress.updateLed(name, true);
         }
     }
-    
-    
+
     public boolean doDisconnect() {
         try {
             sourceSession.disconnect();
@@ -409,7 +413,7 @@ public class UvClient {
         }
         return true;
     }
-    
+
     public void doSingleDisconnect(String name) throws UniSessionException {
         if (name.equals("source")) {
             sourceSession.disconnect();
@@ -510,7 +514,7 @@ public class UvClient {
      */
     public void setItemList(ArrayList<String> items) {
         this.itemList = new UniDynArray();
-        for(String s : items) {
+        for (String s : items) {
             this.itemList.insert(-1, s);
         }
     }
