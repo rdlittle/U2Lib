@@ -51,6 +51,7 @@ public class Config {
     private ObservableList<User> users;
     private ObservableList<Program> programs;
     private ObservableMap<String, String> preferences;
+    public static String configPath;
 
     protected Config() {
         location = new Point();
@@ -73,6 +74,7 @@ public class Config {
         }
         String uvToolDb = uvToolDir.getAbsolutePath() + fileSep + "uvtool.db";
         String fileList[] = uvToolDir.list();
+        configPath = uvToolDir.getAbsolutePath() + fileSep + "config.json";
         if (fileList.length > 0) {
             for (int i = 0; i < fileList.length; i++) {
                 if (fileList[i].equals("uvtool.db")) {
