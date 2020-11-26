@@ -74,7 +74,8 @@ public class Config {
         }
         String uvToolDb = uvToolDir.getAbsolutePath() + fileSep + "uvtool.db";
         String fileList[] = uvToolDir.list();
-        configPath = uvToolDir.getAbsolutePath() + fileSep + "config.json";
+//        configPath = uvToolDir.getAbsolutePath() + fileSep + "config.json";
+        configPath = uvToolDir.getAbsolutePath() + fileSep + "network_topography.json";
         if (fileList.length > 0) {
             for (int i = 0; i < fileList.length; i++) {
                 if (fileList[i].equals("uvtool.db")) {
