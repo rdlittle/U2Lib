@@ -44,7 +44,7 @@ public class UvConnectionTest {
         hostName = "corvette";
         userName = "uvuser";
         password = "uvuser999";
-        accountName = "UVUSERS";
+        accountName = "UVUSER";
         uv = Uv.newInstance(hostName, userName, password, accountName);
     }
     
@@ -56,7 +56,7 @@ public class UvConnectionTest {
     // The methods must be annotated with annotation @Test. For example:
     //
     @Test
-    public void connect() {
+    public void testConnectionSucceeds() {
         boolean connected = false;
         try {
             connected = uv.connect();
@@ -65,5 +65,18 @@ public class UvConnectionTest {
             Logger.getLogger(UvConnectionTest.class.getName()).log(Level.SEVERE, null, ex);
         }
         assertTrue(connected);
+    }
+    
+    @Test
+    public void testConnectionFails() {
+        Uv thisUv = Uv.newInstance(hostName, userName, "badpassword", accountName);
+        boolean connected = false;
+        try {
+            connected = thisUv.connect();
+            thisUv.disconnect();
+        } catch (UniSessionException ex) {
+            Logger.getLogger(UvConnectionTest.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        assertFalse(connected);
     }
 }
