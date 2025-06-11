@@ -13,6 +13,10 @@ import javafx.util.StringConverter;
  * @author rlittle
  */
 public class ServerConverter  extends StringConverter<Server> {
+
+    public ServerConverter() {
+//        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
         @Override
         public String toString(Server object) {
             if(object==null) {
